@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox 
 TOTAL_SAMPLES = 32
 SAMPLES_PER_PX = 1 
+np.random.seed(1618033989) # billion times golden ratio
 def generate_an_image(info: tuple) -> bool:
     svg_file, bitmap_file, output_file, first, second = info 
     paths, attributes = svg2paths(svg_file)
