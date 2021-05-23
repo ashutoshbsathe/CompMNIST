@@ -5,7 +5,7 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import matplotlib 
 matplotlib.use('Agg') # REQUIRED FOR THE DRAWING SHIT, NOT SURE IF IT IS ANY GOOD
 TOTAL_SAMPLES = 32 
-svg_file = './2.svg'
+svg_file = './0.svg'
 width = 28
 height = 28
 padding = 4
@@ -64,9 +64,10 @@ for i in range(n):
             print(f'Updating min_dist = {min_dist} at i = {i} j = {j}')
     print(16*'-')
 print(dist, min_dist, computes)
-scale = width / min_dist 
+# scale = 0.75 * width / min_dist 
+scale = 1
 
-out = np.ones((int(scale * (x_max - x_min)), int(scale * (y_max - y_min)))) * 255
+out = np.ones((int(scale * (y_max - y_min)), int(scale * (x_max - x_min)))) * 255
 print(out.shape)
 from PIL import Image
 import numpy as np
@@ -74,9 +75,10 @@ im = Image.open("./sample_mnist.bmp")
 p = np.array(im)
 print(p.shape, p.min(), p.max())
 for i in range(n):
-    x = int(scale * new_x[i])
+    x = int(scale * (x_max - x_min - new_x[i]))
     y = int(scale * new_y[i])
-    out[x-width//2:x+width//2, y-height//2:y+height//2] = np.minimum(out[x-width//2:x+width//2, y-height//2:y+height//2], p)
+    print(x, y, new_x[i], new_y[i])
+    out[y-height//2:y+height//2, x-width//2:x+width//2] = np.minimum(out[y-height//2:y+height//2, x-width//2:x+width//2], p)
 print(out.shape, out.min(), out.max())
 Image.fromarray(out.astype(np.uint8)).save('new_algo.bmp')
 """
