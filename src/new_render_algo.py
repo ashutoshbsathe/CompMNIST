@@ -2,8 +2,6 @@ from svgpathtools import svg2paths
 import matplotlib.pyplot as plt
 import numpy as np 
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox 
-import matplotlib 
-matplotlib.use('Agg') # REQUIRED FOR THE DRAWING SHIT, NOT SURE IF IT IS ANY GOOD
 TOTAL_SAMPLES = 32 
 svg_file = './0.svg'
 width = 28
@@ -64,8 +62,13 @@ for i in range(n):
             print(f'Updating min_dist = {min_dist} at i = {i} j = {j}')
     print(16*'-')
 print(dist, min_dist, computes)
-# scale = 0.75 * width / min_dist 
-scale = 1
+scale = 0.5 * width / min_dist 
+"""
+0.5 multiplier gives total scaling factor of 1.448
+0.75 multiplier gives total scaling factor of 2.173
+1.0 multiplier gives total scaling factor of 2.897
+"""
+# scale = 1
 
 out = np.ones((int(scale * (y_max - y_min)), int(scale * (x_max - x_min)))) * 255
 print(out.shape)
@@ -81,6 +84,18 @@ for i in range(n):
     out[y-height//2:y+height//2, x-width//2:x+width//2] = np.minimum(out[y-height//2:y+height//2, x-width//2:x+width//2], p)
 print(out.shape, out.min(), out.max())
 Image.fromarray(out.astype(np.uint8)).save('new_algo.bmp')
+
+from matplotlib import patches, text, patheffects
+plt.set_cmap('Purples')
+fig, ax = plt.subplots()
+ax.imshow(out)
+for i in range(n):
+    x = int(scale * (x_max - x_min - new_x[i]))
+    # x = int(scale * new_x[i])
+    # y = int(scale * (y_max - y_min - new_y[i]))
+    y = int(scale * new_y[i])
+    ax.add_patch(patches.Rectangle((x-height//2, y-width//2), height, width, edgecolor='red', facecolor='none'))
+plt.savefig(f'new_image_with_scale_factor_{scale}.pdf')
 """
 def read_img(f: str) -> np.ndarray:
     anno_img = plt.imread(f)
