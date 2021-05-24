@@ -77,6 +77,7 @@ import numpy as np
 im = Image.open("./sample_mnist.bmp")
 p = np.array(im)
 print(p.shape, p.min(), p.max())
+labels = []
 for i in range(n):
     # x = int(scale * (x_max - x_min - new_x[i]))
     x = int(scale * (new_x[i]))
@@ -84,7 +85,31 @@ for i in range(n):
     y = int(scale * (y_max - y_min - new_y[i]))
     print(x, y, new_x[i], new_y[i])
     out[y-height//2:y+height//2, x-width//2:x+width//2] = np.minimum(out[y-height//2:y+height//2, x-width//2:x+width//2], p)
+    labels.append({
+        'x': x-width//2,
+        'y': y-width//2,
+        'width': width,
+        'height': height
+    })
 print(out.shape, out.min(), out.max())
+
+
+# post process 
+# make images square 
+w, h = out.shape 
+if w > h:
+    square = np.ones((w, w)) * 255 
+    square[:, (w-h)//2:(w+h)//2] = out 
+    for i in range(n):
+        labels[i]['x'] += w//2 - h//2
+elif h > w:
+    square = np.ones((h, h)) * 255 
+    square[(h-w)//2:(h+w)//2, :] = out 
+    for i in range(n):
+        labels[i]['y'] += h//2 - w//2
+else:
+    square = out 
+out = square 
 Image.fromarray(out.astype(np.uint8)).save('new_algo.bmp')
 
 from matplotlib import patches, text, patheffects
@@ -92,11 +117,17 @@ plt.set_cmap('Purples')
 fig, ax = plt.subplots()
 ax.imshow(out)
 for i in range(n):
+    """
     # x = int(scale * (x_max - x_min - new_x[i]))
     x = int(scale * new_x[i])
     y = int(scale * (y_max - y_min - new_y[i]))
     # y = int(scale * new_y[i])
-    ax.add_patch(patches.Rectangle((x-width//2, y-height//2), height, width, edgecolor='red', facecolor='none'))
+    """
+    x = labels[i]['x']
+    y = labels[i]['y']
+    width = labels[i]['width']
+    height = labels[i]['height']
+    ax.add_patch(patches.Rectangle((x, y), height, width, edgecolor='red', facecolor='none'))
 plt.savefig(f'new_image_with_scale_factor_{scale}.pdf')
 """
 def read_img(f: str) -> np.ndarray:

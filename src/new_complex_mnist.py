@@ -18,7 +18,7 @@ np.random.seed(1618033989) # billion times golden ratio
 
 def generate_an_image(info: tuple) -> bool:
     svg_file, bitmap_file, output_file, composite, components = info 
-    assert isinstance(components, list)
+    assert isinstance(components, list) or isinstance(components, np.ndarray)
     if len(components) == 1:
         components = components * TOTAL_SAMPLES
     paths, attributes = svg2paths(svg_file)
@@ -81,28 +81,47 @@ def generate_an_image(info: tuple) -> bool:
         component_images = [np.array(Image.open(f)) for f in bitmap_file]
     assert len(component_images) >= n
     assert len(components) >= n
+    labels = []
     for i in range(n):
-        x = int(scale * (x_max - x_min - new_x[i]))
-        y = int(scale * new_y[i])
+        x = int(scale * new_x[i])
+        y = int(scale * (y_max - y_min - new_y[i]))
         out[y-height//2:y+height//2, x-width//2:x+width//2] = np.minimum(
             out[y-height//2:y+height//2, x-width//2:x+width//2], 
             component_images[i]
         )
-    Image.fromarray(out.astype(np.uint8)).save(output_file)
-    # bounding boxes
-    labels = []
-    for i in range(n):
-        x = int(scale * (x_max - x_min - new_x[i]))
-        y = int(scale * new_y[i]) 
         labels.append({
-            # These coordinates can be directly used with matplotlib so they 
-            # use bottom left corner as origin
+            # to show this, just do plt.imshow(image) and then 
+            # add patch with ((x, y), width, height)
             'class': int(components[i]),
             'x': int(x-width//2),
             'y': int(y-height//2),
-            'h': int(height),
-            'w': int(width)
+            'width': width,
+            'height': height
         })
+    # post process 
+    # make images square 
+    w, h = out.shape 
+    if w > h:
+        square = np.ones((w, w)) * 255 
+        square[:, (w-h)//2:(w+h)//2] = out 
+        for i in range(n):
+            labels[i]['x'] += w//2 - h//2
+    elif h > w:
+        square = np.ones((h, h)) * 255 
+        square[(h-w)//2:(h+w)//2, :] = out 
+        for i in range(n):
+            labels[i]['x'] += h//2 - w//2
+    else:
+        square = out 
+    # convert bounding boxes into ratios of their sides 
+    s = square.shape[0]
+    for i in range(n):
+        labels[i]['x'] /= s
+        labels[i]['y'] /= s
+        labels[i]['width'] /= s 
+        labels[i]['height'] /= s 
+    Image.fromarray(square.astype(np.uint8)).save(output_file)
+    # bounding boxes
     with open(output_file + '_labels.json', 'w') as f:
         json.dump({'labels': labels}, f)
     return True
