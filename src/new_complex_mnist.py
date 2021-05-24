@@ -122,8 +122,8 @@ def generate_an_image(info: tuple) -> bool:
         labels[i]['height'] /= s 
     Image.fromarray(square.astype(np.uint8)).save(output_file)
     # bounding boxes
-    with open(output_file + '_labels.json', 'w') as f:
-        json.dump({'labels': labels}, f)
+    with open(output_file + '_gt.json', 'w') as f:
+        json.dump({'composite_class': composite, 'component_classes': labels}, f)
     return True
 
 def generate_dataset(sorted_dir: str = './mnist_sorted', traced_dir: str = './mnist_traced', dest_dir: str = './mnist_complex', mode: str = 'train', nprocesses: int = 4) -> bool:
@@ -227,6 +227,6 @@ def generate_dataset(sorted_dir: str = './mnist_sorted', traced_dir: str = './mn
     
 
 if __name__ == '__main__':
-    # generate_dataset(mode='train', dest_dir='new_mnist_complex')
+    generate_dataset(mode='train', dest_dir='new_mnist_complex')
     generate_dataset(mode='test', dest_dir='new_mnist_complex')
 
