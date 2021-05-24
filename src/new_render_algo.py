@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np 
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox 
 TOTAL_SAMPLES = 32 
-svg_file = './0.svg'
+svg_file = './mnist_traced/train/class_9/0.svg'
 width = 28
 height = 28
 padding = 4
@@ -62,7 +62,7 @@ for i in range(n):
             print(f'Updating min_dist = {min_dist} at i = {i} j = {j}')
     print(16*'-')
 print(dist, min_dist, computes)
-scale = 0.5 * width / min_dist 
+scale = 1
 """
 0.5 multiplier gives total scaling factor of 1.448
 0.75 multiplier gives total scaling factor of 2.173
@@ -78,8 +78,10 @@ im = Image.open("./sample_mnist.bmp")
 p = np.array(im)
 print(p.shape, p.min(), p.max())
 for i in range(n):
-    x = int(scale * (x_max - x_min - new_x[i]))
-    y = int(scale * new_y[i])
+    # x = int(scale * (x_max - x_min - new_x[i]))
+    x = int(scale * (new_x[i]))
+    # y = int(scale * new_y[i])
+    y = int(scale * (y_max - y_min - new_y[i]))
     print(x, y, new_x[i], new_y[i])
     out[y-height//2:y+height//2, x-width//2:x+width//2] = np.minimum(out[y-height//2:y+height//2, x-width//2:x+width//2], p)
 print(out.shape, out.min(), out.max())
@@ -90,11 +92,11 @@ plt.set_cmap('Purples')
 fig, ax = plt.subplots()
 ax.imshow(out)
 for i in range(n):
-    x = int(scale * (x_max - x_min - new_x[i]))
-    # x = int(scale * new_x[i])
-    # y = int(scale * (y_max - y_min - new_y[i]))
-    y = int(scale * new_y[i])
-    ax.add_patch(patches.Rectangle((x-height//2, y-width//2), height, width, edgecolor='red', facecolor='none'))
+    # x = int(scale * (x_max - x_min - new_x[i]))
+    x = int(scale * new_x[i])
+    y = int(scale * (y_max - y_min - new_y[i]))
+    # y = int(scale * new_y[i])
+    ax.add_patch(patches.Rectangle((x-width//2, y-height//2), height, width, edgecolor='red', facecolor='none'))
 plt.savefig(f'new_image_with_scale_factor_{scale}.pdf')
 """
 def read_img(f: str) -> np.ndarray:
