@@ -28,8 +28,11 @@ total_samples = 0
 total_xent = 0
 total_boxes = 0
 total_component = 0
-total_correct_composite = 0
-total_correct_components = 0
+# table[0] = both wrong 
+# table[1] = composite incorrect component correct
+# table[2] = composite correct component incorrect
+# table[3] = both correct
+table = [0, 0, 0, 0]
 for i, batch in enumerate(pbar):
     images, composite_class, component_boxes, component_class = batch 
     images, composite_class, component_boxes, component_class = \
@@ -44,13 +47,21 @@ for i, batch in enumerate(pbar):
     total_component += images.size(0) * component_loss.item()
     total_samples += images.size(0)
 
-    total_correct_composite += (torch.max(pred_composite, 1)[1] == composite_class.long()).sum()
-    total_correct_components += (torch.max(pred_component, 1)[1] == component_class.long()).sum()
+    bool_correct_composite = (torch.max(pred_composite, 1)[1] == composite_class.long())
+    bool_correct_components = (torch.max(pred_component, 1)[1] == component_class.long())
+
+    def logical_not(x):
+        return 1 - x 
+    
+    table[0] += (logical_not(bool_correct_composite) & logical_not(bool_correct_components)).sum()
+    table[1] += (logical_not(bool_correct_composite) & bool_correct_components).sum()
+    table[2] += (bool_correct_composite & logical_not(bool_correct_components)).sum()
+    table[3] += (bool_correct_composite & bool_correct_components).sum()
     pbar.set_description('test: xent_loss: {:.2f} boxloss: {:.2f} component_loss: {:.2f} total_loss: {:.2f}'.format(
         total_xent / total_samples,
         total_boxes / total_samples,
         total_component / total_samples,
         (total_xent + 1/32 * total_boxes + total_component) / total_samples
     ))
-print(total_correct_composite, '/', total_samples)
-print(total_correct_components, '/', total_samples)
+
+print(table)
