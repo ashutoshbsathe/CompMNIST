@@ -15,7 +15,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = ComplexMNISTModel('resnet18').to(device)
 model.load_state_dict(ckpt['model_state_dict'])
 model.eval()
-test = ComplexMNISTDataset(root='../../new_mnist_complex/', transform=torchvision.transforms.Compose([
+test = ComplexMNISTDataset(root='../new_mnist_complex/', transform=torchvision.transforms.Compose([
     torchvision.transforms.ToPILImage(),
     torchvision.transforms.Resize(224),
     torchvision.transforms.ToTensor()
@@ -29,6 +29,11 @@ total_xent = 0
 total_bce = 0
 total_correct_composite = 0
 total_correct_components = 0
+# table[0] = both wrong 
+# table[1] = composite incorrect component correct
+# table[2] = composite correct component incorrect
+# table[3] = both correct
+table = [0, 0, 0, 0]
 for i, batch in enumerate(pbar):
     images, composite, component = batch 
     images, composite, component = images.to(device), composite.to(device), component.to(device)
@@ -43,6 +48,17 @@ for i, batch in enumerate(pbar):
 
     total_correct_composite += (torch.max(pred_composite, 1)[1] == composite).sum().item()
     total_correct_components += ((pred_component >= 0.5).long() == component.long()).sum().item()
+
+    bool_correct_composite = (torch.max(pred_composite, 1)[1] == composite)
+    bool_correct_components = (((pred_component >= 0.5).long() == component.long()).sum(1) / 10).byte()
+
+    def logical_not(x):
+        return 1 - x 
+    
+    table[0] += (logical_not(bool_correct_composite) & logical_not(bool_correct_components)).sum()
+    table[1] += (logical_not(bool_correct_composite) & bool_correct_components).sum()
+    table[2] += (bool_correct_composite & logical_not(bool_correct_components)).sum()
+    table[3] += (bool_correct_composite & bool_correct_components).sum()
     pbar.set_description('test: xent_loss: {:.2f} bce_loss: {:.2f} total_loss: {:.2f}'.format(
         total_xent / total_samples,
         total_bce / total_samples,
@@ -50,3 +66,4 @@ for i, batch in enumerate(pbar):
     ))
 print(total_correct_composite, '/', total_samples)
 print(total_correct_components, '/', total_samples * 10)
+print(table)
