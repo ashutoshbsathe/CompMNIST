@@ -1,0 +1,9 @@
+
+__pycache__
+
+mnist_raw
+mnist_sorted
+mnist_traced
+new_mnist_complex
+
+train_labels_new.csv
