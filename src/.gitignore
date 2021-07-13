@@ -7,3 +7,4 @@ mnist_traced
 new_mnist_complex
 
 train_labels_new.csv
+test_labels_new.csv
