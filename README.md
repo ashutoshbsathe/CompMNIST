@@ -1,4 +1,4 @@
-# ComplexMNIST [WIP]
+# CompMNIST [WIP]
 ComplexMNIST dataset for complex vision problem
 
 # Usage
